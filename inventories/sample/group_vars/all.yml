@@ -1,0 +1,43 @@
+---
+ansible_maximal_version: 2.16.8
+ansible_minimal_version: 2.14.0
+mode: debug
+cluster_network:
+  cidr: 24
+  gateway: 192.168.1.1
+proxmox_api:
+  host: 192.168.1.xx
+  user: root@pam
+  token_id: cluster_admin
+  token_secret: 1234abc
+proxmox_timeouts:
+  api: 120
+  common: 30
+  creation: 15
+  startup: 300
+  shutdown: 600
+virtual_machines:
+  # - vmid: 101
+  #   name: loadbalancer
+  #   clone: ubuntu-22.04-server-amd64
+  #   node: promox
+  #   cores: 2
+  #   memory: 2048
+  #   autostart: true
+  #   onboot: true
+  #   customize:
+  #     ip: 192.168.1.50
+  # - vmid: 102
+  #   name: seed_server
+  #   clone: ubuntu-22.04-server-amd64
+  #   node: promox
+  #   cores: 2
+  #   memory: 2048
+  #   autostart: true
+  - vmid: 103
+    name: seed_server
+    clone: ubuntu-22.04-server-amd64
+    node: promox1
+    cores: 2
+    memory: 2048
+    autostart: true

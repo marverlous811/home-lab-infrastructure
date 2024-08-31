@@ -1,0 +1,16 @@
+---
+- name: List all existing VMs
+  community.general.proxmox_vm_info:
+    api_host: '{{ proxmox_api.host }}'
+    api_user: '{{ proxmox_api.user }}'
+    api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+    api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+    node: '{{ node }}'
+  register: list_current_available_vm
+
+- name: Display not filter images
+  ansible.builtin.debug:
+    msg: '{{ available_vm }}'
+  vars:
+    search_query: 'proxmox_vms[?template==false].vmid'
+    available_vm: '{{ vm_list | json_query(search_query) }}'

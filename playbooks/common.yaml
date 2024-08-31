@@ -1,0 +1,42 @@
+---
+- name: Check ansible version
+  import_playbook: ansible_version.yaml
+
+- name: Install requests python package
+  hosts: proxmox
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check Proxmoxer lib
+      ansible.builtin.command: python3 -c 'import proxmoxer'
+      register: proxmoxer_status
+      failed_when: proxmoxer_status.rc != 0
+      changed_when: false
+      ignore_errors: true
+
+    - name: Install Proxmoxer
+      when: proxmoxer_status.rc != 0
+      block:
+        - name: Install pip
+          ansible.builtin.package:
+            name:
+              - sudo
+              - python3-pip
+            state: present
+
+        - name: Ignore PEP 668 because it's silly
+          ansible.builtin.file:
+            path: '/usr/lib/python{{ ansible_python.version.major }}.{{ ansible_python.version.minor }}/EXTERNALLY-MANAGED'
+            state: absent
+          become: true
+
+        - name: Install requests python package
+          ansible.builtin.pip:
+            name:
+              - requests
+              - requests_toolbelt
+              - openssh_wrapper
+              - paramiko
+              - proxmoxer
+          vars:
+            ansible_python_interpreter: /usr/bin/python3

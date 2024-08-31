@@ -1,0 +1,79 @@
+---
+- name: Create VM from template
+  block:
+    - name: Debug vm
+      ansible.builtin.debug:
+        msg: '{{ vm }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Create VM
+      community.general.proxmox_kvm:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+        api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+        node: '{{ vm.node }}'
+        newid: '{{ vm.vmid }}'
+        clone: '{{ vm.clone }}'
+        cores: '{{ vm.cores }}'
+        autostart: '{{ vm.autostart }}'
+        memory: '{{ vm.memory }}'
+        sata: '{{ vm.sata | default(omit) }}'
+        scsi: '{{ vm.scsi | default(omit) }}'
+        onboot: '{{ vm.onboot | default(omit)}}'
+        name: '{{ vm.name }}'
+        timeout: '{{ proxmox_timeouts.api }}'
+      register: result
+
+    - name: Debug result
+      ansible.builtin.debug:
+        msg: '{{ result }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Customize Network
+      when: vm.customize is defined
+      block:
+        - name: Update IP configuration
+          community.general.proxmox_kvm:
+            api_host: '{{ proxmox_api.host }}'
+            api_user: '{{ proxmox_api.user }}'
+            api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+            api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+            node: '{{ vm.node }}'
+            vmid: '{{ vm.vmid }}'
+            ipconfig:
+              ipconfig0: 'ip={{ vm.customize.ip }}/{{ cluster_network.cidr }},gw={{ cluster_network.gateway }}'
+            state: present
+            update: true
+
+    - name: Start VM
+      community.general.proxmox_kvm:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id }}'
+        api_token_secret: '{{ proxmox_api.token_secret }}'
+        name: '{{ vm.name | default(omit) }}'
+        state: started
+        vmid: '{{ vm.vmid | default(omit) }}'
+
+    - name: Wait for server to startup
+      ansible.builtin.wait_for_connection:
+        timeout: '{{ proxmox_timeouts.startup }}'
+
+    # - name: Install packages
+    #   ansible.builtin.package:
+    #     name:
+    #       - net-tools
+    #   register: result
+    #   retries: 3
+    #   delay: '{{ proxmox_timeouts.creation }}'
+    #   until: result is not failed
+
+    # - name: Init vpn service
+    #   template:
+    #     src: lab_vpn.service.j2
+    #     dest: /etc/systemd/system/lab_vpn.service
+    #     owner: root
+    #     group: root
+    #     mode: 0644
+    #   register: result

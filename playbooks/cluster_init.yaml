@@ -1,0 +1,34 @@
+---
+- name: Common tasks for every playbooks
+  import_playbook: common.yaml
+
+- name: Init VMs for cluster
+  hosts: promox
+  vars:
+    search:
+    nodes: "{{ groups['proxmox'] }}"
+  tasks:
+    ## TODO: write create template automatically
+    - name: List vm for sync
+      ansible.builtin.include_role:
+        name: proxmox
+        tasks_from: loop_nodes
+      vars:
+        proxmox_loop_tasks: vm/list_sync_vm.yaml
+        proxmox_nodes: '{{ nodes }}'
+
+    - name: Create VMs
+      ansible.builtin.include_role:
+        name: proxmox
+        tasks_from: vm/create_vm
+      loop: '{{ vm_will_be_created }}'
+      loop_control:
+        loop_var: vm
+
+    - name: Remove Vms
+      ansible.builtin.include_role:
+        name: proxmox
+        tasks_from: vm/remove_vm
+      loop: '{{ vm_will_be_deleted }}'
+      loop_control:
+        loop_var: vm

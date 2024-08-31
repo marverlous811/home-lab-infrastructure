@@ -1,0 +1,6 @@
+---
+- name: Loop over all proxmox node
+  ansible.builtin.include_tasks: '{{ proxmox_loop_tasks }}'
+  loop: '{{ proxmox_nodes }}'
+  loop_control:
+    loop_var: node

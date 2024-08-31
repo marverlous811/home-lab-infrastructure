@@ -1,0 +1,51 @@
+- name: List Vms for Sync
+  block:
+    - name: Get list vm input for node
+      ansible.builtin.set_fact:
+        list_vm: '{{ virtual_machines | json_query("[?node==`" + node + "`]") }}'
+
+    - name: Debug list vm for node
+      ansible.builtin.debug:
+        msg: '{{ list_vm }}'
+      when: mode is defined and mode == "debug"
+
+    - name: List all existing VMs
+      community.general.proxmox_vm_info:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+        api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+        node: '{{ node }}'
+      register: list_current_available_vm
+
+    - name: Debug list current available vm
+      ansible.builtin.debug:
+        msg: '{{ list_current_available_vm }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Filter available VMs
+      vars:
+        available_vm: '{{ list_current_available_vm.proxmox_vms | list | json_query("[?template==`false`]") }}'
+      ansible.builtin.set_fact:
+        list_available_vm: '{{ available_vm }}'
+        available_vm_ids: '{{ available_vm | json_query("[*].vmid") }}'
+
+    - name: Debug available vm
+      ansible.builtin.debug:
+        msg: '{{ available_vm_ids }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Set list of VM objects that should be created
+      vars:
+        list_vmid: '{{ list_vm | json_query("[*].vmid") }}'
+      ansible.builtin.set_fact:
+        vm_will_be_created: '{{ list_vm | rejectattr("vmid", "in", available_vm_ids) | list }}'
+        vm_will_be_deleted: '{{ list_available_vm | rejectattr("vmid", "in", list_vmid) | list }}'
+
+    - name: Display VMs that will be created
+      ansible.builtin.debug:
+        msg: '{{ vm_will_be_created }}'
+
+    - name: Display VMs that will be deleted
+      ansible.builtin.debug:
+        msg: '{{ vm_will_be_deleted }}'

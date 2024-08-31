@@ -1,0 +1,46 @@
+---
+- name: Remove Vm
+  block:
+    - name: Debug vm
+      ansible.builtin.debug:
+        msg: '{{ vm }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Shutdown VM
+      community.general.proxmox_kvm:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+        api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+        node: '{{ vm.node }}'
+        vmid: '{{ vm.vmid }}'
+        name: '{{ vm.name | default(omit) }}'
+        state: absent
+        timeout: '{{ proxmox_timeouts.shutdown }}'
+        force: true
+      register: shutdown_result
+      when: vm.status == 'running'
+
+    - name: Wait for server to shutdown
+      ansible.builtin.wait_for_connection:
+        timeout: '{{ proxmox_timeouts.common }}'
+      when: vm.status == 'running'
+
+    - name: Debug shutdown result
+      ansible.builtin.debug:
+        msg: '{{ shutdown_result }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Remove VM
+      community.general.proxmox_kvm:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+        api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+        node: '{{ vm.node }}'
+        vmid: '{{ vm.vmid }}'
+        name: '{{ vm.name | default(omit) }}'
+        state: absent
+        timeout: '{{ proxmox_timeouts.api }}'
+        force: true
+      register: result

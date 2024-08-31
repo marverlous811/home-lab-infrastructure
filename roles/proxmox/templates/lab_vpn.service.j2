@@ -1,0 +1,10 @@
+[Unit]
+Description=Lab VPN
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/sbin/openvpn --config /opt/openvpn/client.ovpn
+
+[Install]
+WantedBy=multi-user.target

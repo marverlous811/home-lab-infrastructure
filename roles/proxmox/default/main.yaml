@@ -1,0 +1,7 @@
+---
+proxmox_timeouts:
+  api: 120
+  creation: 15
+  startup: 300
+
+proxmox_use_become: false

@@ -1,0 +1,7 @@
+*.ovpn
+.vscode
+hosts.ini
+tmp
+inventories/*
+sample
+!inventories/sample
