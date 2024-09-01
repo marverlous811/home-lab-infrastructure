@@ -16,6 +16,11 @@ proxmox_timeouts:
   creation: 15
   startup: 300
   shutdown: 600
+  disk_change: 720
+agent:
+  user: root
+  pass: 123
+  sskkeys: abc
 virtual_machines:
   # - vmid: 101
   #   name: loadbalancer
@@ -24,9 +29,16 @@ virtual_machines:
   #   cores: 2
   #   memory: 2048
   #   autostart: true
-  #   onboot: true
-  #   customize:
-  #     ip: 192.168.1.50
+  #   ip: 192.168.1.50
+  #   disks:
+  #     - size: +5G
+  #       disk: scsi0
+  #       state: resized
+  #     - size: 10
+  #       disk: scsi1
+  #       state: present
+  #       storage: data
+  #       format: raw
   # - vmid: 102
   #   name: seed_server
   #   clone: ubuntu-22.04-server-amd64
@@ -34,10 +46,10 @@ virtual_machines:
   #   cores: 2
   #   memory: 2048
   #   autostart: true
-  - vmid: 103
-    name: seed_server
-    clone: ubuntu-22.04-server-amd64
-    node: promox1
-    cores: 2
-    memory: 2048
-    autostart: true
+  # - vmid: 103
+  #   name: seed_server
+  #   clone: ubuntu-22.04-server-amd64
+  #   node: promox1
+  #   cores: 2
+  #   memory: 2048
+  #   autostart: true

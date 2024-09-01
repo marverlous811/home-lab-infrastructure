@@ -3,10 +3,16 @@
     - name: Get list vm input for node
       ansible.builtin.set_fact:
         list_vm: '{{ virtual_machines | json_query("[?node==`" + node + "`]") }}'
+        list_vmid: '{{ list_vm | json_query("[*].vmid") | default([]) }}'
 
     - name: Debug list vm for node
       ansible.builtin.debug:
         msg: '{{ list_vm }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Debug list vm for node
+      ansible.builtin.debug:
+        msg: '{{ list_vmid | type_debug }}'
       when: mode is defined and mode == "debug"
 
     - name: List all existing VMs
@@ -36,11 +42,20 @@
       when: mode is defined and mode == "debug"
 
     - name: Set list of VM objects that should be created
-      vars:
-        list_vmid: '{{ list_vm | json_query("[*].vmid") }}'
       ansible.builtin.set_fact:
         vm_will_be_created: '{{ list_vm | rejectattr("vmid", "in", available_vm_ids) | list }}'
-        vm_will_be_deleted: '{{ list_available_vm | rejectattr("vmid", "in", list_vmid) | list }}'
+
+    - name: Set list of VM objects that should be deleted
+      block:
+        - name: if list_vmid is List
+          when: list_vmid | type_debug == "list"
+          ansible.builtin.set_fact:
+            vm_will_be_deleted: '{{ list_available_vm | rejectattr("vmid", "in", list_vmid) | list }}'
+
+        - name: if list_vmid is not List
+          when: list_vmid | type_debug != "list"
+          ansible.builtin.set_fact:
+            vm_will_be_deleted: '{{ list_available_vm }}'
 
     - name: Display VMs that will be created
       ansible.builtin.debug:

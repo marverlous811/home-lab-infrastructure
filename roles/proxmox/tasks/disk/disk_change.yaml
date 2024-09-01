@@ -1,0 +1,27 @@
+---
+- name: Update disk
+  block:
+    - name: Debug disk
+      ansible.builtin.debug:
+        msg: '{{ disk }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Change disk
+      community.general.proxmox_disk:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+        api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+        vmid: '{{ vmid }}'
+        disk: '{{ disk.disk }}'
+        size: '{{ disk.size }}'
+        state: '{{ disk.state }}'
+        storage: '{{ disk.storage | default(omit) }}'
+        format: '{{ disk.format | default(omit) }}'
+        timeout: '{{ proxmox_timeouts.disk_change }}'
+      register: result
+
+    - name: Debug result
+      ansible.builtin.debug:
+        msg: '{{ result }}'
+      when: mode is defined and mode == "debug"
