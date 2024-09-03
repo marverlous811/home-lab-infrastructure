@@ -15,24 +15,34 @@
         node: '{{ vm.node }}'
         newid: '{{ vm.vmid }}'
         clone: '{{ vm.clone }}'
-        cores: '{{ vm.cores }}'
-        autostart: '{{ vm.autostart }}'
-        memory: '{{ vm.memory }}'
-        sata: '{{ vm.sata | default(omit) }}'
-        scsi: '{{ vm.scsi | default(omit) }}'
-        onboot: '{{ vm.onboot | default(omit)}}'
         name: '{{ vm.name }}'
         timeout: '{{ proxmox_timeouts.api }}'
-        ciuser: '{{agent.user}}'
-        cipassword: '{{agent.pass}}'
-        sskkeys: '{{ agent.sshkeys | default(omit) }}'
-        full: false
       register: result
 
     - name: Debug result
       ansible.builtin.debug:
         msg: '{{ result }}'
       when: mode is defined and mode == "debug"
+
+    - name: Update option for VM
+      community.general.proxmox_kvm:
+        api_host: '{{ proxmox_api.host }}'
+        api_user: '{{ proxmox_api.user }}'
+        api_token_id: '{{ proxmox_api.token_id | default(omit) }}'
+        api_token_secret: '{{ proxmox_api.token_secret | default(omit) }}'
+        node: '{{ vm.node }}'
+        vmid: '{{ vm.vmid }}'
+        cores: '{{ vm.cores }}'
+        autostart: '{{ vm.autostart }}'
+        memory: '{{ vm.memory }}'
+        timeout: '{{ proxmox_timeouts.api }}'
+        onboot: '{{ vm.onboot | default(omit)}}'
+        ciuser: '{{agent.user}}'
+        cipassword: '{{agent.pass}}'
+        sskkeys: '{{ agent.sshkeys | default(omit) }}'
+        state: present
+        update: true
+      register: result
 
     - name: Update IP configuration
       when: vm.ip is defined
@@ -68,7 +78,10 @@
         vmid: '{{ vm.vmid | default(omit) }}'
 
     - name: Wait for server to startup
-      ansible.builtin.wait_for_connection:
+      ansible.builtin.wait_for:
+        port: 22
+        host: '{{ vm.ip }}'
+        search_regex: OpenSSH
         timeout: '{{ proxmox_timeouts.startup }}'
 
     - name: Add new host

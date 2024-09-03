@@ -1,7 +1,21 @@
 - name: Install packages
   ansible.builtin.package:
-    name:
+    name: '{{ packages }}'
+    update_cache: true
+    state: present
+  vars:
+    packages:
       - net-tools
+      - openvpn
+      - build-essential
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - dnsutils
+      - traceroute
+      - tcpdump
+      - jq
   register: result
   retries: 3
   delay: '{{ proxmox_timeouts.creation }}'
@@ -15,11 +29,3 @@
     group: root
     mode: '0644'
   register: result
-
-- name: Resize disk to use all available splace
-  ansible.builtin.shell:
-    cmd: |
-      growpart /dev/sda 3
-      resize2fs /dev/sda3
-  register: result
-  changed_when: result.stdout != ""
