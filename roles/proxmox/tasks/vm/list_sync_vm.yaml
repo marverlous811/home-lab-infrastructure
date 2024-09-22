@@ -3,14 +3,27 @@
     - name: Get list vm input for node
       ansible.builtin.set_fact:
         list_vm: '{{ virtual_machines | json_query("[?node==`" + node + "`]") }}'
-        list_vmid: '{{ list_vm | json_query("[*].vmid") | default([]) }}'
+
+    - name: Get list vmid input for node
+      with_items: '{{ list_vm }}'
+      ansible.builtin.set_fact:
+        list_vmid: >
+          {{
+            list_vmid | default([]) +
+            [ item.vmid ]
+          }}
 
     - name: Debug list vm for node
       ansible.builtin.debug:
         msg: '{{ list_vm }}'
       when: mode is defined and mode == "debug"
 
-    - name: Debug list vm for node
+    - name: Debug list vm id for node
+      ansible.builtin.debug:
+        msg: '{{ list_vmid }}'
+      when: mode is defined and mode == "debug"
+
+    - name: Debug list vm id type
       ansible.builtin.debug:
         msg: '{{ list_vmid | type_debug }}'
       when: mode is defined and mode == "debug"

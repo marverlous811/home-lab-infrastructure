@@ -21,11 +21,31 @@
   delay: '{{ proxmox_timeouts.creation }}'
   until: result is not failed
 
-- name: Init vpn service
-  ansible.builtin.template:
-    src: lab_vpn.service.j2
-    dest: /etc/systemd/system/lab_vpn.service
-    owner: root
-    group: root
-    mode: '0644'
-  register: result
+- name: Join Vpn
+  when: vpn_name is defined
+  block:
+    - name: Init vpn service
+      ansible.builtin.template:
+        src: lab_vpn.service.j2
+        dest: /etc/systemd/system/lab_vpn.service
+        owner: root
+        group: root
+        mode: '0644'
+      register: result
+
+    - name: Create directory for openvpn
+      ansible.builtin.file:
+        path: /opt/openvpn
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy Vpn Keys
+      ansible.builtin.copy:
+        src: '{{ vpn.key_dir }}/{{ vpn_name }}.ovpn'
+        dest: /opt/openvpn/client.ovpn
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart vpn service

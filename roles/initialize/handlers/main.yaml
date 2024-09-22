@@ -1,0 +1,6 @@
+- name: Restart vpn service
+  ansible.builtin.systemd:
+    name: lab_vpn
+    daemon_reload: true
+    enabled: true
+    state: restarted

@@ -5,3 +5,4 @@ tmp
 inventories/*
 sample
 !inventories/sample
+test.yaml

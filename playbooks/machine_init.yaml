@@ -1,0 +1,7 @@
+---
+- name: Initialize VMs
+  hosts: new_machine
+  tasks:
+    - name: Include role initialized
+      ansible.builtin.include_role:
+        name: initialize

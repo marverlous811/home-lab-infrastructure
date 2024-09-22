@@ -91,6 +91,7 @@
         ansible_ssh_user: '{{ agent.user }}'
         # ansible_ssh_pass: '{{ agent.pass }}'
         ansible_become_password: '{{ agent.pass }}'
+        vpn_name: '{{ vm.vpn_name }}'
         become: true
         groups:
           - new_machine

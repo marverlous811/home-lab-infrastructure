@@ -21,6 +21,8 @@ agent:
   user: root
   pass: 123
   sskkeys: abc
+vpn:
+  key_dir: /etc/openvpn/keys
 virtual_machines:
   # - vmid: 101
   #   name: loadbalancer
@@ -30,6 +32,7 @@ virtual_machines:
   #   memory: 2048
   #   autostart: true
   #   ip: 192.168.1.50
+  #   vpn_name: loadbalancer
   #   disks:
   #     - size: +5G
   #       disk: scsi0
@@ -45,6 +48,7 @@ virtual_machines:
   #   node: promox
   #   cores: 2
   #   memory: 2048
+  #   vpn_name: loadbalancer
   #   autostart: true
   # - vmid: 103
   #   name: seed_server
