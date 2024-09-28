@@ -5,3 +5,60 @@
     - name: Include role initialized
       ansible.builtin.include_role:
         name: initialize
+
+- name: Generate ssh key for seed machine
+  hosts: seed_machine
+  tasks:
+    - name: Save seed machine name
+      ansible.builtin.set_fact:
+        seed_machine_name: '{{ inventory_hostname }}'
+
+    - name: Generate ssh from local machine
+      become: false
+      delegate_to: localhost
+      block:
+        - name: Debug current dir
+          ansible.builtin.debug:
+            msg: '{{ lookup("env", "PWD") }}'
+
+        - name: Create main directory
+          ansible.builtin.file:
+            path: '{{ lookup("env", "PWD") }}/tmp/ssh_key'
+            state: directory
+            mode: '755'
+
+        - name: Generate ssh key
+          ansible.builtin.openssh_keypair:
+            path: '{{ lookup("env", "PWD") }}/tmp/ssh_key/id_{{ ssh_key_type }}'
+            type: '{{ ssh_key_type }}'
+            size: 4096
+
+    - name: Copy private key to seed machine
+      ansible.builtin.copy:
+        src: '{{ lookup("env", "PWD") }}/tmp/ssh_key/id_{{ ssh_key_type }}'
+        dest: '{{ ssh_key_path }}/id_{{ ssh_key_type }}'
+        mode: 400
+
+    - name: Copy private key to seed machine
+      ansible.builtin.copy:
+        src: '{{ lookup("env", "PWD") }}/tmp/ssh_key/id_{{ ssh_key_type }}.pub'
+        dest: '{{ ssh_key_path }}/id_{{ ssh_key_type }}.pub'
+        mode: 0644
+
+- name: Assign ssh key to other hosts
+  hosts: new_machine
+  vars:
+    seed_machine_name: '{{ hostvars[groups.seed_machine[0]].seed_machine_name }}'
+  tasks:
+    - name: Echo seed machine name
+      when: inventory_hostname != seed_machine_name
+      block:
+        - name: Echo machine name will execute for debug
+          when: mode == 'debug'
+          ansible.builtin.debug:
+            msg: '{{ inventory_hostname }}'
+
+        - name: Execute assign key tasks
+          ansible.builtin.include_role:
+            name: initialize
+            tasks_from: assign_ssh_key

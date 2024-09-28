@@ -1,0 +1,23 @@
+---
+- name: Copy ssh key to other hosts
+  block:
+    - name: Fetch public key from seed_machine
+      ansible.builtin.copy:
+        src: '{{ lookup("env", "PWD") }}/tmp/ssh_key/id_{{ ssh_key_type }}.pub'
+        dest: '/tmp/id_{{ ssh_key_type }}.pub'
+        mode: '0644'
+
+    - name: get remote file contents
+      command: 'cat /tmp/id_{{ ssh_key_type }}.pub'
+      register: key
+
+    - name: Add the public key to authorized_keys
+      ansible.builtin.authorized_key:
+        user: root
+        key: '{{ key.stdout }}'
+        state: present
+
+    - name: Clean up old ssh key
+      ansible.builtin.file:
+        path: '/tmp/id_{{ ssh_key_type }}.pub'
+        state: absent
